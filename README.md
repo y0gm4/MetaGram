@@ -18,7 +18,7 @@ Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/Tele
     ```xml
 	<dependency>
 		<groupId>com.github.CarbonCock</groupId>
-		<artifactId>MetaGramApi</artifactId>
+		<artifactId>MetaGram</artifactId>
 		<version>1.0</version>
 	</dependency>
 	```
@@ -32,7 +32,7 @@ Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/Tele
   ```
   ```groovy
   dependencies {
-      implementation 'com.github.CarbonCock:MetaGramApi:1.0'
+      implementation 'com.github.CarbonCock:MetaGram:1.0'
   }
   ```
 
