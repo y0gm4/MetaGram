@@ -38,7 +38,7 @@ Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/Tele
 
 ## Index
 ***
-- [`Register events`](##Register-events)
+- [`Register events`](#Register-events)
 - [`Command`](#Command)
     - [Permission example](#Command-permission)
     - [Help command](#Command)
