@@ -39,14 +39,14 @@ Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/Tele
 ## Index
 ***
 - [`Register events`](##Register-events)
-- [`Command`](##Command)
-    - [Permission example](##Command-permission)
-    - [Help command](##Command)
-- [`Callback`](##Callback)
+- [`Command`](#Command)
+    - [Permission example](#Command-permission)
+    - [Help command](#Command)
+- [`Callback`](#Callback)
     - [Permission example](##Callback-permission)
-- [`Permission`](##Command-permission)
-    - [Permission Handler](###Permission-hanlder)
-- [`Default Listener`](##Default-listener)
+- [`Permission`](#Command-permission)
+    - [Permission Handler](#Permission-hanlder)
+- [`Default Listener`](#Default-listener)
     - [Filters]() | **Coming soon** |
 
 ## About
@@ -57,7 +57,7 @@ It simplifies the creation of **commands**, their **help command**, listening to
 # How to use
 ***
 
-## Register events
+# Register events
 There are **2 ways** to **register** an **event**:
 
 1. Using the `registerEvent(Listener l)` method.
@@ -89,7 +89,7 @@ public class Main {
 bot.registerEvents("org.carboncock.metagram.test"); // It will register all the events of the package "test"
 ```
 ***
-## Command
+# Command
 
 Let's create a class to handle our command, then implement the `CommandListener` interface that includes 2 methods:
 
@@ -138,7 +138,7 @@ public class MyCommand implements CommandListener {
 
 For handling a *variable number of arguments*, simply set the `checkedArgs` field to `false`.
 ***
-## Command permission
+# Command permission
 
 A command can be used by everyone or only some people can use it.
 By **annotating** the class of the command with `@Permission(...)` we will set other characteristics to the command:
@@ -186,7 +186,7 @@ public class MyCommand implements CommandListener, Permissionable {
     }
 }
 ```
-### Permission handler
+# Permission handler
 The class containing the `List<Long> admins` field is shown below.
 
 ```java
@@ -259,7 +259,7 @@ public class MyCallback implements CallbackListener {
 If we had a callback with a **variable part** we can set a different filter for example `CallbackFilter.START_WITH` or `CallbackFilter.CONTAINS`, it depends on the variable part.
 ***
 
-## Callback permission
+# Callback permission
 
 A callback can be sent by everyone or only some people can send it.
 This part has already been covered in the [`Command permission`](##Command-permission) section
@@ -291,7 +291,7 @@ public class MyCallback implements CallbackListener, Permissionable {
 <img src="https://i.imgur.com/lNjLPlt.png" align="center">
 
 ***
-## Default listener
+# Default listener
 
 Let’s create a class to handle every update, then implement the UpdateListener interface that includes 1 method:
 `public void onCallback(...)` It will be executed when the bot recives an update such the default **TelegramLongPollingBot**'s method
