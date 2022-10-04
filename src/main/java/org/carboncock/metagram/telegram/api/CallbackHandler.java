@@ -37,6 +37,7 @@ public class CallbackHandler implements UpdateListener {
         if(!update.hasCallbackQuery()) return;
         String query = update.getCallbackQuery().getData();
         Optional<Class<? extends CallbackListener>> optClass = getCallbackClass(query);
+
         if(!optClass.isPresent()) return;
         Class<? extends CallbackListener> clazz = optClass.get();
         User user = update.getCallbackQuery().getFrom();
@@ -113,21 +114,18 @@ public class CallbackHandler implements UpdateListener {
 
 
     private Optional<Class<? extends CallbackListener>> getCallbackClass(String query){
-        Optional<Class<? extends CallbackListener>> optClass = Optional.empty();
         for(Map.Entry<Callback, Class<? extends CallbackListener>> entry : queryMap.entrySet()){
             Callback c = entry.getKey();
+            if(!query.equalsIgnoreCase(c.query())) continue;
             switch(c.filter()){
                 case EQUALS:
-                    optClass = query.equalsIgnoreCase(c.query()) ? Optional.of(entry.getValue()) : Optional.empty();
-                    break;
+                    return query.equalsIgnoreCase(c.query()) ? Optional.of(entry.getValue()) : Optional.empty();
                 case START_WITH:
-                    optClass = query.startsWith(c.query()) ? Optional.of(entry.getValue()) : Optional.empty();
-                    break;
+                    return query.startsWith(c.query()) ? Optional.of(entry.getValue()) : Optional.empty();
                 default:
-                    optClass = query.contains(c.query()) ? Optional.of(entry.getValue()) : Optional.empty();
-                    break;
+                    return query.contains(c.query()) ? Optional.of(entry.getValue()) : Optional.empty();
             }
         }
-        return optClass;
+        return Optional.empty();
     }
 }
