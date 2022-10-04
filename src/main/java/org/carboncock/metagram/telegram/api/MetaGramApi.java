@@ -91,7 +91,6 @@ public class MetaGramApi extends TelegramLongPollingBot {
                 throw new AnnotationMissingException(String.format("Callback.class annotation is missing for %s class", clazz.getName()));
             Callback callback = clazz.getAnnotation(Callback.class);
             query.put(callback, clazz);
-
             if(clazz.isAnnotationPresent(Permission.class))
                 try {
                     Permission permission = clazz.getAnnotation(Permission.class);
@@ -120,7 +119,7 @@ public class MetaGramApi extends TelegramLongPollingBot {
                 .stream()
                 .filter(Listener.class::isAssignableFrom)
                 .filter(clazz -> clazz.isAnnotationPresent(Command.class) ||
-                        clazz.isAnnotationPresent(Callback.class))
+                        clazz.isAnnotationPresent(Callback.class) || Listener.class.isAssignableFrom(clazz))
                 .map(clazz -> {
                     Listener listener = null;
                     try {
