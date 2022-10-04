@@ -99,17 +99,16 @@ public class CommandHandler implements UpdateListener {
     }
 
     private Optional<Class<? extends CommandListener>> getCommandClass(String command) {
-        Optional<Class<? extends CommandListener>> optClass = Optional.empty();
         for(Map.Entry<Command, Class<? extends CommandListener>> entry : commands.entrySet()){
             Command c = entry.getKey();
             List<String> args = Arrays.asList(c.aliases());
             if(entry.getKey().name().equalsIgnoreCase(command))
-                optClass = Optional.of(entry.getValue());
+                return Optional.of(entry.getValue());
             else if(args.contains(command.toLowerCase(Locale.ROOT)))
-                optClass = Optional.of(entry.getValue());
+                return Optional.of(entry.getValue());
 
         }
-        return optClass;
+        return Optional.empty();
     }
 
 }
