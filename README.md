@@ -46,6 +46,7 @@ Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/Tele
   - [Permission example](##Callback-permission)
 - [`Permission`](#Command-permission)
   - [Permission Handler](#Permission-hanlder)
+- [`EventHandler`](#Event-Handler)
 - [`Default Listener`](#Default-listener)
   - [Filters]() | **Coming soon** |
 
@@ -306,7 +307,7 @@ public class MyUpdateClass implements UpdateListener {
 }
 ```
 
-# EventHandler
+# Event Handler
 
 Suppose we do not want to have one **command/callback** per **class**, but want to have *everything together*.
 Let's create a class that extends the `Listener.class` interface and annotate it with the `EventHandler.class` annotation.
