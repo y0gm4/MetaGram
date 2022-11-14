@@ -32,7 +32,7 @@ Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/Tele
   ```
   ```groovy
   dependencies {
-      implementation 'com.github.CarbonCock:MetaGram:1.0.2'
+      implementation 'com.github.CarbonCock:MetaGram:1.1.0'
   }
   ```
 
