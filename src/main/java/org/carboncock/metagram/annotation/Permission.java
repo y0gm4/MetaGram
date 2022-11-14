@@ -8,7 +8,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Permission {
     /** <h3>The <b>class</b> that contains, as a field, the list of ids.<br>
@@ -24,4 +24,6 @@ public @interface Permission {
      * or <code>MESSAGE_EDIT</code>
      * and the permission is for a <b>command</b>.*/
     SendMethod send();
+
+    String onMissingPermission() default "";
 }

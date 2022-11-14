@@ -2,10 +2,7 @@ package org.carboncock.metagram.telegram.api;
 
 import lombok.Setter;
 import lombok.SneakyThrows;
-import org.carboncock.metagram.annotation.Callback;
-import org.carboncock.metagram.annotation.Command;
-import org.carboncock.metagram.annotation.Permission;
-import org.carboncock.metagram.annotation.PermissionHandler;
+import org.carboncock.metagram.annotation.*;
 import org.carboncock.metagram.annotation.exception.AnnotationMissingException;
 import org.carboncock.metagram.annotation.exception.IllegalSendingMethodException;
 import org.carboncock.metagram.annotation.exception.ListFieldNotFoundException;
@@ -20,13 +17,16 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class MetaGramApi extends TelegramLongPollingBot {
 
     protected static final Map<Callback, Class<? extends CallbackListener>> query = new HashMap<>();
     protected static final Map<Command, Class<? extends CommandListener>> commands = new HashMap<>();
     protected static final List<UpdateListener> listeners = new ArrayList<>();
+    protected static final List<Listener> genericListeners = new ArrayList<>();
 
     @SneakyThrows
     public MetaGramApi(){
@@ -110,6 +110,12 @@ public class MetaGramApi extends TelegramLongPollingBot {
         else if(event instanceof UpdateListener){
             listeners.add((UpdateListener) event);
         }
+        else {
+            Class<? extends Listener> clazz = event.getClass();
+            if(!clazz.isAnnotationPresent(EventHandler.class))
+                throw new AnnotationMissingException(String.format("EventHandler.class annotation is missing for class %s", clazz.getName()));
+            genericListeners.add(event);
+        }
     }
 
     @SneakyThrows
@@ -117,9 +123,10 @@ public class MetaGramApi extends TelegramLongPollingBot {
         new Reflections(packagePath, new SubTypesScanner(false))
                 .getSubTypesOf(Object.class)
                 .stream()
-                .filter(Listener.class::isAssignableFrom)
                 .filter(clazz -> clazz.isAnnotationPresent(Command.class) ||
-                        clazz.isAnnotationPresent(Callback.class) || Listener.class.isAssignableFrom(clazz))
+                        clazz.isAnnotationPresent(Callback.class) ||
+                        clazz.isAnnotationPresent(EventHandler.class) ||
+                        Listener.class.isAssignableFrom(clazz))
                 .map(clazz -> {
                     Listener listener = null;
                     try {

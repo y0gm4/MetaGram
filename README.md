@@ -1,6 +1,6 @@
 # MetaGram Api
 ***
-[![](https://jitpack.io/v/CarbonCock/MetaGramApi.svg)](https://jitpack.io/#CarbonCock/MetaGramApi)
+[![](https://jitpack.io/v/CarbonCock/MetaGram.svg)](https://jitpack.io/#CarbonCock/MetaGram)
 
 Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/TelegramBots) library to simplify creating a **Telegram** bot in **Java**
 
@@ -10,8 +10,8 @@ Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/Tele
    ```xml
 	<repositories>
 		<repository>
-			<id>jitpack.io</id>
-			<url>https://jitpack.io</url>
+		    <id>jitpack.io</id>
+		    <url>https://jitpack.io</url>
 		</repository>
 	</repositories>
 	```
@@ -19,7 +19,7 @@ Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/Tele
 	<dependency>
 		<groupId>com.github.CarbonCock</groupId>
 		<artifactId>MetaGram</artifactId>
-		<version>1.0.2</version>
+		<version>1.1.0</version>
 	</dependency>
 	```
 - For *Gradle* Add the JitPack repository in your root `build.gradle` at the end of repositories, and add the dependency as shown:
@@ -40,14 +40,14 @@ Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/Tele
 ***
 - [`Register events`](#Register-events)
 - [`Command`](#Command)
-    - [Permission example](#Command-permission)
-    - [Help command](#Command)
+  - [Permission example](#Command-permission)
+  - [Help command](#Command)
 - [`Callback`](#Callback)
-    - [Permission example](##Callback-permission)
+  - [Permission example](##Callback-permission)
 - [`Permission`](#Command-permission)
-    - [Permission Handler](#Permission-hanlder)
+  - [Permission Handler](#Permission-hanlder)
 - [`Default Listener`](#Default-listener)
-    - [Filters]() | **Coming soon** |
+  - [Filters]() | **Coming soon** |
 
 ## About
 ***
@@ -65,20 +65,20 @@ There are **2 ways** to **register** an **event**:
 
 ```java
 public class Main {
-    
-    private static final String token = "bot token";
-    private static final String username = "bot username";
-    
-    public static void main(String... args) throws TelegramApiException {
-        TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class); // TelegramBots api rubenlaugs
-        MetaGramApi bot = new MetaGramApi(); // MetaGram api CarbonCock
-        bot.setBotToken(token);
-        bot.setBotUsername(username);
-        
-        api.registerBot(bot); // TelegramBots api
-        
-        bot.registerEvent(new MyCommand()) // MetaGramApi register single generic event
-    }
+
+  private static final String token = "bot token";
+  private static final String username = "bot username";
+
+  public static void main(String... args) throws TelegramApiException {
+    TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class); // TelegramBots api rubenlaugs
+    MetaGramApi bot = new MetaGramApi(); // MetaGram api CarbonCock
+    bot.setBotToken(token);
+    bot.setBotUsername(username);
+
+    api.registerBot(bot); // TelegramBots api
+
+    bot.registerEvent(new MyCommand()); // MetaGramApi register single generic event
+  }
 }
 ```
 
@@ -108,30 +108,30 @@ To make it clear what kind of command we are talking about the `@Command(...)` a
 ```java
 @Command(name = "say", args = 1, aliases = {"write", "w"})
 public class MyCommand implements CommandListener {
-    @Override
-    public void onCommand(TelegramLongPollingBot bot, Update update) {
-        String command = update.getMessage().getText();
-        SendMessage mex = new SendMessage();
-        mex.setChatId("" + update.getMessage().getChatId());
-        mex.setText(command.substring(command.indexOf(" ")));
-        try {
-            bot.execute(mex);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
+  @Override
+  public void onCommand(TelegramLongPollingBot bot, Update update) {
+    String command = update.getMessage().getText();
+    SendMessage mex = new SendMessage();
+    mex.setChatId("" + update.getMessage().getChatId());
+    mex.setText(command.substring(command.indexOf(" ")));
+    try {
+      bot.execute(mex);
+    } catch (TelegramApiException e) {
+      e.printStackTrace();
     }
-    
-    @Override
-    public void onHelpCommand(TelegramLongPollingBot bot, Update update) {
-        SendMessage mex = new SendMessage();
-        mex.setChatId("" + update.getMessage().getChatId());
-        mex.setText("usage: /say [word]");
-        try {
-            bot.execute(mex);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
+  }
+
+  @Override
+  public void onHelpCommand(TelegramLongPollingBot bot, Update update) {
+    SendMessage mex = new SendMessage();
+    mex.setChatId("" + update.getMessage().getChatId());
+    mex.setText("usage: /say [word]");
+    try {
+      bot.execute(mex);
+    } catch (TelegramApiException e) {
+      e.printStackTrace();
     }
+  }
 }
 ```
 <img src="https://i.imgur.com/Kftug6u.png" align="center">
@@ -155,35 +155,35 @@ Finally, we need to **implement** the `Permissionable` interface and **override*
 @Command(name = "say", args = 1, aliases = {"write", "w"})
 @Permission(listLocation = BotManager.class, send = SendMethod.REPLY_MESSAGE)
 public class MyCommand implements CommandListener, Permissionable {
-    @Override
-    public void onCommand(TelegramLongPollingBot bot, Update update) {
-        String command = update.getMessage().getText();
-        SendMessage mex = new SendMessage();
-        mex.setChatId("" + update.getMessage().getChatId());
-        mex.setText(command.substring(command.indexOf(" ")));
-        try {
-            bot.execute(mex);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
+  @Override
+  public void onCommand(TelegramLongPollingBot bot, Update update) {
+    String command = update.getMessage().getText();
+    SendMessage mex = new SendMessage();
+    mex.setChatId("" + update.getMessage().getChatId());
+    mex.setText(command.substring(command.indexOf(" ")));
+    try {
+      bot.execute(mex);
+    } catch (TelegramApiException e) {
+      e.printStackTrace();
     }
+  }
 
-    @Override
-    public void onHelpCommand(TelegramLongPollingBot bot, Update update) {
-        SendMessage mex = new SendMessage();
-        mex.setChatId("" + update.getMessage().getChatId());
-        mex.setText("usage: /say [word]");
-        try {
-            bot.execute(mex);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
+  @Override
+  public void onHelpCommand(TelegramLongPollingBot bot, Update update) {
+    SendMessage mex = new SendMessage();
+    mex.setChatId("" + update.getMessage().getChatId());
+    mex.setText("usage: /say [word]");
+    try {
+      bot.execute(mex);
+    } catch (TelegramApiException e) {
+      e.printStackTrace();
     }
+  }
 
-    @Override
-    public String onPermissionMissing() {
-        return "\uD83D\uDEAB You are not authorized to use this command!";
-    }
+  @Override
+  public String onPermissionMissing() {
+    return "\uD83D\uDEAB You are not authorized to use this command!";
+  }
 }
 ```
 # Permission handler
@@ -191,10 +191,10 @@ The class containing the `List<Long> admins` field is shown below.
 
 ```java
 public class BotHandler {
-    @PermissionHandler
-    List<Long> admins = new ArrayList<>();
-    
-    // stuffs
+  @PermissionHandler
+  List<Long> admins = new ArrayList<>();
+
+  // stuffs
 }
 ```
 
@@ -208,15 +208,15 @@ If we annotate a method without arguments it will be executed before the permiss
 
 ```java
 public class BotHandler {
-    @PermissionHandler
-    List<Long> admins = new ArrayList<>();
-    
-    // stuffs
-    
-    @PermissionHandler
-    public void updateAdmins(){
-        // might execute a query to the database to update admins list
-    }
+  @PermissionHandler
+  List<Long> admins = new ArrayList<>();
+
+  // stuffs
+
+  @PermissionHandler
+  public void updateAdmins(){
+    // might execute a query to the database to update admins list
+  }
 }
 ```
 ***
@@ -237,18 +237,18 @@ To make it clear what kind of callback we are trying to handle the `@Callback(..
 ```java
 @Callback(query = "test")
 public class MyCallback implements CallbackListener {
-    @Override
-    public void onCallback(TelegramLongPollingBot bot, Update update) {
-        EditMessageText mex = new EditMessageText();
-        mex.setChatId("" + update.getCallbackQuery().getMessage().getChatId());
-        mex.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
-        mex.setText("Clicked!");
-        try {
-            bot.execute(mex);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
+  @Override
+  public void onCallback(TelegramLongPollingBot bot, Update update) {
+    EditMessageText mex = new EditMessageText();
+    mex.setChatId("" + update.getCallbackQuery().getMessage().getChatId());
+    mex.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
+    mex.setText("Clicked!");
+    try {
+      bot.execute(mex);
+    } catch (TelegramApiException e) {
+      e.printStackTrace();
     }
+  }
 }
 ```
 
@@ -268,23 +268,23 @@ This part has already been covered in the [`Command permission`](##Command-permi
 @Callback(query = "test")
 @Permission(listLocation = BotManager.class, send = SendMethod.ANSWER_CALLBACK_QUERY)
 public class MyCallback implements CallbackListener, Permissionable {
-    @Override
-    public void onCallback(TelegramLongPollingBot bot, Update update) {
-        EditMessageText mex = new EditMessageText();
-        mex.setChatId("" + update.getCallbackQuery().getMessage().getChatId());
-        mex.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
-        mex.setText("Clicked!");
-        try {
-            bot.execute(mex);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
+  @Override
+  public void onCallback(TelegramLongPollingBot bot, Update update) {
+    EditMessageText mex = new EditMessageText();
+    mex.setChatId("" + update.getCallbackQuery().getMessage().getChatId());
+    mex.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
+    mex.setText("Clicked!");
+    try {
+      bot.execute(mex);
+    } catch (TelegramApiException e) {
+      e.printStackTrace();
     }
+  }
 
-    @Override
-    public String onPermissionMissing() {
-        return "\uD83D\uDEAB You're not allowed to click me!";
-    }
+  @Override
+  public String onPermissionMissing() {
+    return "\uD83D\uDEAB You're not allowed to click me!";
+  }
 }
 ```
 
@@ -299,11 +299,44 @@ Let’s create a class to handle every update, then implement the UpdateListener
 
 ```java
 public class MyUpdateClass implements UpdateListener {
-    @Override
-    public void onUpdate(TelegramLongPollingBot bot, Update update){
-        // stuffs
-    }
+  @Override
+  public void onUpdate(TelegramLongPollingBot bot, Update update){
+    // stuffs
+  }
 }
 ```
 
+# EventHandler
 
+Suppose we do not want to have one **command/callback** per **class**, but want to have *everything together*.
+Let's create a class that extends the `Listener.class` interface and annotate it with the `EventHandler.class` annotation.
+Next we create our methods for handling commands and callbacks and annotate them like this.
+
+```java
+@EventHandler
+public class MyEventClass implements Listener {
+
+  @Command("start")
+  public void onStartCommand(TelegramLongPollingBot bot, Update update) {
+    //stuffs
+  }
+
+  @Command(value = "removeuser", args = 1)
+  @HelpIdentifier("removeuserhelp")
+  @Permission(listLocation = Bot.class, send = SendMethod.REPLY_MESSAGE, onMissingPermission = "You are not able to do that!")
+  public void onRemoveUser(TelegramLongPollingBot bot, Update update) {
+    //stuffs
+  }
+
+  @Callback("home")
+  public void onHomeCallback(TelegramLongPollingBot bot, Update update) {
+    //stuffs
+  }
+
+  @HelpIdentifier("removeuserhelp")
+  public void onRemoveUserHelp(TelegramLongPollingBot bot, Update update) {
+    //stuffs
+  }
+
+}
+```
