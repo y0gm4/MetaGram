@@ -99,7 +99,7 @@ Let's create a class to handle our command, then implement the `CommandListener`
 
 To make it clear what kind of command we are talking about the `@Command(...)` annotation comes into our help, it requires the following **fields**:
 
-- `String` **name** ---> *The name of the command*
+- `String` **value** ---> *The name of the command*
 - `int` **args** ----> *The number of arguments of the command* | **By default** zero
 - `String[]` **aliases** ----> *Aliases of the command* | **By default** empty
 - `boolean` **checkedArgs** ----> *Checking the number of arguments to execute the command* | **By default** true
@@ -107,7 +107,7 @@ To make it clear what kind of command we are talking about the `@Command(...)` a
 ### Example
 
 ```java
-@Command(name = "say", args = 1, aliases = {"write", "w"})
+@Command(value = "say", args = 1, aliases = {"write", "w"})
 public class MyCommand implements CommandListener {
   @Override
   public void onCommand(TelegramLongPollingBot bot, Update update) {
@@ -153,7 +153,7 @@ Finally, we need to **implement** the `Permissionable` interface and **override*
 ### Example
 
 ```java
-@Command(name = "say", args = 1, aliases = {"write", "w"})
+@Command(value = "say", args = 1, aliases = {"write", "w"})
 @Permission(listLocation = BotManager.class, send = SendMethod.REPLY_MESSAGE)
 public class MyCommand implements CommandListener, Permissionable {
   @Override
@@ -230,13 +230,13 @@ Let's create a class to handle our callback, then implement the `CallbackListene
 
 To make it clear what kind of callback we are trying to handle the `@Callback(...)` annotation comes into our help, it requires the following **fields**:
 
-- `String` **query** ---> *The data of the callback*
+- `String` **value** ---> *The data of the callback*
 - `CallbackFilter` **filter** ---> *The type of filter for the query data* | **By default** `CallbackFilter.EQUALS`
 
 ### Example
 
 ```java
-@Callback(query = "test")
+@Callback("test")
 public class MyCallback implements CallbackListener {
   @Override
   public void onCallback(TelegramLongPollingBot bot, Update update) {
@@ -266,7 +266,7 @@ A callback can be sent by everyone or only some people can send it.
 This part has already been covered in the [`Command permission`](##Command-permission) section
 
 ```java
-@Callback(query = "test")
+@Callback("test")
 @Permission(listLocation = BotManager.class, send = SendMethod.ANSWER_CALLBACK_QUERY)
 public class MyCallback implements CallbackListener, Permissionable {
   @Override
