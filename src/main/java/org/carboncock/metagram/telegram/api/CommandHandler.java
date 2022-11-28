@@ -13,6 +13,7 @@ import org.carboncock.metagram.listener.CommandListener;
 import org.carboncock.metagram.listener.Listener;
 import org.carboncock.metagram.listener.Permissionable;
 import org.carboncock.metagram.listener.UpdateListener;
+import org.carboncock.metagram.telegram.data.CommandData;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -36,30 +37,40 @@ public class CommandHandler implements UpdateListener {
     public void onUpdate(TelegramLongPollingBot bot, Update update) {
         if(!update.hasMessage()) return;
         if(!update.getMessage().hasText()) return;
-        if(!update.getMessage().getText().startsWith("/")) return;
 
+        char prefix = update.getMessage().getText().charAt(0);
         String command = update.getMessage().getText().substring(1);
         String headCommand = command;
         if(command.split(" ").length > 1) headCommand = command.substring(0, command.indexOf(" "));
-        getCommandMethod(headCommand).ifPresent(method -> {
-            if(method.getParameterTypes().length != 2 && (method.getParameterTypes()[0].equals(TelegramLongPollingBot.class) || method.getParameterTypes()[1].equals(Update.class)))
+        String finalHeadCommand1 = headCommand;
+        getCommandMethod(headCommand, prefix).ifPresent(method -> {
+            if(method.getParameterTypes().length != 1 && (method.getParameterTypes()[0].equals(CommandData.class)))
                 try {
-                    throw new IllegalMethodException("The annotated method must have as its first and second parameters the respective types: TelegramLongPollingBot.class & Update.class");
+                    throw new IllegalMethodException("The annotated method must have only 1 parameter of type CommandData.class");
                 } catch (IllegalMethodException e) {
                     e.printStackTrace();
                     return;
                 }
             Class<?> mClass = method.getDeclaringClass();
             if(method.isAnnotationPresent(Permission.class) && !isPermitted(method.getAnnotation(Permission.class), mClass, bot, update)) return;
+            CommandData commandData = new CommandData(
+                    command.replace(finalHeadCommand1, "").trim().split(" "),
+                    update.getMessage().getFrom(),
+                    Optional.ofNullable(update.getMessage().getReplyToMessage()),
+                    bot,
+                    update
+            );
+            commandData.setAnnotation(method.getAnnotation(Command.class));
+            commandData.setPermission(Optional.ofNullable(method.getAnnotation(Permission.class)));
             try {
-                method.invoke(mClass.getDeclaredConstructor().newInstance(), bot, update);
+                method.invoke(mClass.getDeclaredConstructor().newInstance(), commandData);
             } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
                 e.printStackTrace();
             }
         });
         if(headCommand.equalsIgnoreCase("help") && !command.equalsIgnoreCase("help")){
             String cmd = command.replace(headCommand, "").trim();
-            Optional<Method> commandHelpMethodOpt = getCommandMethod(cmd);
+            Optional<Method> commandHelpMethodOpt = getCommandMethod(cmd, prefix);
             commandHelpMethodOpt.ifPresent(method -> {
                 if(!method.isAnnotationPresent(HelpIdentifier.class))
                     return;
@@ -77,6 +88,7 @@ public class CommandHandler implements UpdateListener {
                                     e.printStackTrace();
                                     return;
                                 }
+
                             try {
                                 m.invoke(m.getDeclaringClass().getDeclaredConstructor().newInstance(), bot, update);
                             } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
@@ -85,7 +97,7 @@ public class CommandHandler implements UpdateListener {
                         });
             });
             if(commandHelpMethodOpt.isPresent()) return;
-            Optional<Class<? extends CommandListener>> optClass = getCommandClass(cmd);
+            Optional<Class<? extends CommandListener>> optClass = getCommandClass(cmd, prefix);
             if(!optClass.isPresent()) return;
             Class<? extends CommandListener> clazz = optClass.get();
             Method m = clazz.getMethod("onHelpCommand", TelegramLongPollingBot.class, Update.class);
@@ -93,7 +105,7 @@ public class CommandHandler implements UpdateListener {
             return;
         }
 
-        Optional<Class<? extends CommandListener>> optClass = getCommandClass(headCommand);
+        Optional<Class<? extends CommandListener>> optClass = getCommandClass(headCommand, prefix);
         if(!optClass.isPresent()) return;
 
         Class<? extends CommandListener> clazz = optClass.get();
@@ -103,14 +115,24 @@ public class CommandHandler implements UpdateListener {
 
         if(clazz.isAnnotationPresent(Permission.class) && !isPermitted(clazz.getAnnotation(Permission.class), clazz, bot, update))
             return;
+        CommandData commandData = new CommandData(
+                command.replace(headCommand, "").trim().split(" "),
+                update.getMessage().getFrom(),
+                Optional.ofNullable(update.getMessage().getReplyToMessage()),
+                bot,
+                update
+        );
+        commandData.setAnnotation(c);
+        commandData.setPermission(Optional.ofNullable(clazz.getAnnotation(Permission.class)));
+        Method m = clazz.getMethod("onCommand", CommandData.class);
+        m.invoke(clazz.getDeclaredConstructor().newInstance(), commandData);
 
-        Method m = clazz.getMethod("onCommand", TelegramLongPollingBot.class, Update.class);
-        m.invoke(clazz.getDeclaredConstructor().newInstance(), bot, update);
     }
 
-    private Optional<Class<? extends CommandListener>> getCommandClass(String command) {
+    private Optional<Class<? extends CommandListener>> getCommandClass(String command, char prefix) {
         for(Map.Entry<Command, Class<? extends CommandListener>> entry : commands.entrySet()){
             Command c = entry.getKey();
+            if(c.prefix() != prefix) continue;
             List<String> args = Arrays.asList(c.aliases());
             if(entry.getKey().value().equalsIgnoreCase(command))
                 return Optional.of(entry.getValue());
@@ -121,7 +143,7 @@ public class CommandHandler implements UpdateListener {
         return Optional.empty();
     }
 
-    private Optional<Method> getCommandMethod(String command) {
+    private Optional<Method> getCommandMethod(String command, char prefix) {
         AtomicReference<Optional<Method>> method = new AtomicReference<>(Optional.empty());
         genericListener.forEach(listener -> {
             Class<? extends Listener> clazz = listener.getClass();
@@ -129,6 +151,7 @@ public class CommandHandler implements UpdateListener {
                     .filter(m -> m.isAnnotationPresent(Command.class))
                     .filter(m -> {
                         Command c = m.getAnnotation(Command.class);
+                        if(c.prefix() != prefix) return false;
                         List<String> args = Arrays.asList(c.aliases());
                         return (c.value().equalsIgnoreCase(command) || args.contains(command.toLowerCase(Locale.ROOT)))
                                 && c.checkedArgs() && c.args() == command.split(" ").length - 1;

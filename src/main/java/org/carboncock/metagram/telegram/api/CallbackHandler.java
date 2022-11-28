@@ -2,17 +2,18 @@ package org.carboncock.metagram.telegram.api;
 
 import lombok.SneakyThrows;
 import org.carboncock.metagram.annotation.Callback;
-import org.carboncock.metagram.annotation.Command;
 import org.carboncock.metagram.annotation.Permission;
 import org.carboncock.metagram.annotation.PermissionHandler;
 import org.carboncock.metagram.annotation.exception.IllegalMethodException;
 import org.carboncock.metagram.annotation.exception.IllegalPermissionHandlerMethodException;
+import org.carboncock.metagram.annotation.types.CallbackFilter;
 import org.carboncock.metagram.annotation.types.PermissionType;
 import org.carboncock.metagram.annotation.types.SendMethod;
 import org.carboncock.metagram.listener.CallbackListener;
 import org.carboncock.metagram.listener.Listener;
 import org.carboncock.metagram.listener.Permissionable;
 import org.carboncock.metagram.listener.UpdateListener;
+import org.carboncock.metagram.telegram.data.CallbackData;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -42,17 +43,22 @@ public class CallbackHandler implements UpdateListener {
 
         Optional<Method> callbackMethodOpt = getCallbackMethod(query);
         callbackMethodOpt.ifPresent(method -> {
-            if(method.getParameterTypes().length != 2 && (method.getParameterTypes()[0].equals(TelegramLongPollingBot.class) || method.getParameterTypes()[1].equals(Update.class)))
+            if(method.getParameterTypes().length != 1 && method.getParameterTypes()[0].equals(CallbackData.class))
                 try {
-                    throw new IllegalMethodException("The annotated method must have as its first and second parameters the respective types: TelegramLongPollingBot.class & Update.class");
+                    throw new IllegalMethodException("The annotated method must have only 1 parameter of type CallbackData.class");
                 } catch (IllegalMethodException e) {
                     e.printStackTrace();
                     return;
                 }
             Class<?> mClass = method.getDeclaringClass();
-            if(method.isAnnotationPresent(Permission.class) && !isPermitted(method.getAnnotation(Permission.class), mClass, bot, update)) return;
+            Permission permission = method.getAnnotation(Permission.class);
+            Callback callback = method.getAnnotation(Callback.class);
+            if(method.isAnnotationPresent(Permission.class) && !isPermitted(permission, mClass, bot, update)) return;
+            CallbackData callbackData = new CallbackData(bot, update, getParams(query, callback));
+            callbackData.setAnnotation(callback);
+            callbackData.setPermission(Optional.ofNullable(permission));
             try {
-                method.invoke(mClass.getDeclaredConstructor().newInstance(), bot, update);
+                method.invoke(mClass.getDeclaredConstructor().newInstance(), callbackData);
             } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
                 e.printStackTrace();
             }
@@ -62,15 +68,18 @@ public class CallbackHandler implements UpdateListener {
         Class<? extends CallbackListener> clazz = optClass.get();
         if(clazz.isAnnotationPresent(Permission.class) && !isPermitted(clazz.getAnnotation(Permission.class), clazz, bot, update))
             return;
-        Method m = clazz.getMethod("onCallback", TelegramLongPollingBot.class, Update.class);
-        m.invoke(clazz.getDeclaredConstructor().newInstance(), bot, update);
+        Callback callback = clazz.getAnnotation(Callback.class);
+        CallbackData callbackData = new CallbackData(bot, update, getParams(query, callback));
+        callbackData.setAnnotation(callback);
+        callbackData.setPermission(Optional.ofNullable(clazz.getAnnotation(Permission.class)));
+        Method m = clazz.getMethod("onCallback", CallbackData.class);
+        m.invoke(clazz.getDeclaredConstructor().newInstance(), callbackData);
     }
 
 
     private Optional<Class<? extends CallbackListener>> getCallbackClass(String query){
         for(Map.Entry<Callback, Class<? extends CallbackListener>> entry : queryMap.entrySet()){
             Callback c = entry.getKey();
-            if(!query.startsWith(c.value())) continue;
             switch(c.filter()){
                 case EQUALS:
                     return query.equalsIgnoreCase(c.value()) ? Optional.of(entry.getValue()) : Optional.empty();
@@ -78,6 +87,8 @@ public class CallbackHandler implements UpdateListener {
                     return query.startsWith(c.value()) ? Optional.of(entry.getValue()) : Optional.empty();
                 case CONTAINS:
                     return query.contains(c.value()) ? Optional.of(entry.getValue()) : Optional.empty();
+                case CUSTOM_PARAMETER:
+                    return query.startsWith(c.value().substring(0, c.value().indexOf("=") + 1)) ? Optional.of(entry.getValue()) : Optional.empty();
             }
         }
         return Optional.empty();
@@ -91,7 +102,6 @@ public class CallbackHandler implements UpdateListener {
                     .filter(m -> m.isAnnotationPresent(Callback.class))
                     .filter(m -> {
                         Callback callback = m.getAnnotation(Callback.class);
-                        if(!query.startsWith(callback.value())) return false;
                         switch(callback.filter()){
                             case EQUALS:
                                 return query.equalsIgnoreCase(callback.value());
@@ -99,12 +109,29 @@ public class CallbackHandler implements UpdateListener {
                                 return query.startsWith(callback.value());
                             case CONTAINS:
                                 return query.contains(callback.value());
+                            case CUSTOM_PARAMETER:
+                                return query.startsWith(callback.value().substring(0, callback.value().indexOf("=") + 1));
+                                // TODO check regex and add parameters
                         }
                         return false;
                     })
                     .findFirst());
         });
         return method.get();
+    }
+
+    private Map<String, Object> getParams(String data, Callback callback){
+        Map<String, Object> params = new HashMap<>();
+        String[] paramsNames = callback.value().substring(callback.value().indexOf("=") + 1)
+                .replace("{", "")
+                .replace("}", "")
+                .split("&");
+        String[] paramsValues = data.substring(data.indexOf("=") + 1).split("&");
+        if(paramsNames.length != paramsValues.length || !callback.filter().equals(CallbackFilter.CUSTOM_PARAMETER))
+            return params;
+        for(int i = 0; i < paramsNames.length; i++)
+            params.put(paramsNames[i], paramsValues[i]);
+        return params;
     }
 
     @SneakyThrows

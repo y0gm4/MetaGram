@@ -19,7 +19,7 @@ Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/Tele
 	<dependency>
 		<groupId>com.github.CarbonCock</groupId>
 		<artifactId>MetaGram</artifactId>
-		<version>1.1.0</version>
+		<version>1.2.0</version>
 	</dependency>
 	```
 - For *Gradle* Add the JitPack repository in your root `build.gradle` at the end of repositories, and add the dependency as shown:
@@ -32,7 +32,7 @@ Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/Tele
   ```
   ```groovy
   dependencies {
-      implementation 'com.github.CarbonCock:MetaGram:1.1.0'
+      implementation 'com.github.CarbonCock:MetaGram:1.2.0'
   }
   ```
 
@@ -44,6 +44,7 @@ Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/Tele
   - [Help command](#Command)
 - [`Callback`](#Callback)
   - [Permission example](##Callback-permission)
+  - [Filters](##Filters-examples)
 - [`Permission`](#Command-permission)
   - [Permission Handler](#Permission-hanlder)
 - [`EventHandler`](#Event-Handler)
@@ -67,14 +68,14 @@ There are **2 ways** to **register** an **event**:
 ```java
 public class Main {
 
-  private static final String token = "bot token";
-  private static final String username = "bot username";
+  private static final String TOKEN = "bot token";
+  private static final String USERNAME = "bot username";
 
   public static void main(String... args) throws TelegramApiException {
     TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class); // TelegramBots api rubenlaugs
     MetaGramApi bot = new MetaGramApi(); // MetaGram api CarbonCock
-    bot.setBotToken(token);
-    bot.setBotUsername(username);
+    bot.setBotToken(TOKEN);
+    bot.setBotUsername(USERNAME);
 
     api.registerBot(bot); // TelegramBots api
 
@@ -100,9 +101,10 @@ Let's create a class to handle our command, then implement the `CommandListener`
 To make it clear what kind of command we are talking about the `@Command(...)` annotation comes into our help, it requires the following **fields**:
 
 - `String` **value** ---> *The name of the command*
-- `int` **args** ----> *The number of arguments of the command* | **By default** zero
-- `String[]` **aliases** ----> *Aliases of the command* | **By default** empty
-- `boolean` **checkedArgs** ----> *Checking the number of arguments to execute the command* | **By default** true
+- `char` **prefix** ---> *The prefix of the command* | **By default** '/'
+- `int` **args** ---> *The number of arguments of the command* | **By default** zero
+- `String[]` **aliases** ---> *Aliases of the command* | **By default** empty
+- `boolean` **checkedArgs** ---> *Checking the number of arguments to execute the command* | **By default** true
 
 ### Example
 
@@ -110,13 +112,14 @@ To make it clear what kind of command we are talking about the `@Command(...)` a
 @Command(value = "say", args = 1, aliases = {"write", "w"})
 public class MyCommand implements CommandListener {
   @Override
-  public void onCommand(TelegramLongPollingBot bot, Update update) {
+  public void onCommand(CommandData cmd) {
+    Update update = cmd.getUpdate();
     String command = update.getMessage().getText();
     SendMessage mex = new SendMessage();
     mex.setChatId("" + update.getMessage().getChatId());
     mex.setText(command.substring(command.indexOf(" ")));
     try {
-      bot.execute(mex);
+      cmd.getBotInstance().bot.execute(mex);
     } catch (TelegramApiException e) {
       e.printStackTrace();
     }
@@ -157,13 +160,14 @@ Finally, we need to **implement** the `Permissionable` interface and **override*
 @Permission(listLocation = BotManager.class, send = SendMethod.REPLY_MESSAGE)
 public class MyCommand implements CommandListener, Permissionable {
   @Override
-  public void onCommand(TelegramLongPollingBot bot, Update update) {
+  public void onCommand(CommandData cmd) {
+    Update update = cmd.getUpdate();
     String command = update.getMessage().getText();
     SendMessage mex = new SendMessage();
     mex.setChatId("" + update.getMessage().getChatId());
     mex.setText(command.substring(command.indexOf(" ")));
     try {
-      bot.execute(mex);
+      cmd.getBotInstance().bot.execute(mex);
     } catch (TelegramApiException e) {
       e.printStackTrace();
     }
@@ -183,6 +187,7 @@ public class MyCommand implements CommandListener, Permissionable {
 
   @Override
   public String onPermissionMissing() {
+    // actions ...
     return "\uD83D\uDEAB You are not authorized to use this command!";
   }
 }
@@ -239,13 +244,14 @@ To make it clear what kind of callback we are trying to handle the `@Callback(..
 @Callback("test")
 public class MyCallback implements CallbackListener {
   @Override
-  public void onCallback(TelegramLongPollingBot bot, Update update) {
+  public void onCallback(CallbackData callbackData) {
+    Update update = callbackData.getUpdate();
     EditMessageText mex = new EditMessageText();
     mex.setChatId("" + update.getCallbackQuery().getMessage().getChatId());
     mex.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
     mex.setText("Clicked!");
     try {
-      bot.execute(mex);
+      callbackData.getBotInstance().execute(mex);
     } catch (TelegramApiException e) {
       e.printStackTrace();
     }
@@ -270,13 +276,14 @@ This part has already been covered in the [`Command permission`](##Command-permi
 @Permission(listLocation = BotManager.class, send = SendMethod.ANSWER_CALLBACK_QUERY)
 public class MyCallback implements CallbackListener, Permissionable {
   @Override
-  public void onCallback(TelegramLongPollingBot bot, Update update) {
+  public void onCallback(CallbackData callbackData) {
+    Update update = callbackData.getUpdate();
     EditMessageText mex = new EditMessageText();
     mex.setChatId("" + update.getCallbackQuery().getMessage().getChatId());
     mex.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
     mex.setText("Clicked!");
     try {
-      bot.execute(mex);
+      callbackData.getBotInstance().execute(mex);
     } catch (TelegramApiException e) {
       e.printStackTrace();
     }
@@ -290,6 +297,46 @@ public class MyCallback implements CallbackListener, Permissionable {
 ```
 
 <img src="https://i.imgur.com/lNjLPlt.png" align="center">
+
+***
+
+## Filters example
+Suppose we have a callback with variable data, that's where **filters** come in.
+Depending on our needs, we can choose the filter that suits us best from these:
+- `EQUALS`: This filter is already set by default, it is used to check if the received callback data is the same as the one set (not case sensitive)
+- `START_WITH`: Checks if the data set matches the start of the received callback data
+- `CONTAINS`: Checks if the data set are inside the received callback data
+- `CUSTOM_PARAMETER`: This filter follows its own specific pattern:
+  `filter_name={key1}&{key2}&{key3}...`
+  - `filter_name`: It is the name of the filter (it works like the START_WITH filter) it basically checks if the received callback data starts with that sequence of characters.
+  - `=`: Separates filter name from key sequence
+  - `{key1}...`:  Sequence of keys which will be associated with the data sent and collected in a `Map<String, Object>` accessed by the `CallbackData` object
+  
+### CUSTOM_PARAMETER example
+```java
+@EventHandler
+public class MailSectionServices implements Listener {
+    
+    private final DbManager db = MyBot.db;
+    
+    @Command("mails")
+    public void onCommand(CommandData cmd){
+      InlineKeyboardMarkup ikm = new InlineKeyboardMarkup();
+      ikm.setKeyboard(Collections.singletonList(Collections.singletonList(InlineKeyboardButton.builder().text("support@CarbonCock.com").callbackData("rmusermail=%s&%s".formatted(0123456789L, "support@CarbonCock.com")).build())));
+      cmd.getBotInstance().execute(SendMessage.builder()
+              .chatId("" + cmd.getSender().getId())
+              .text("mails settings")
+              .replyMarkup(ikm)
+              .build());
+    }
+
+    @Callback(value = "rmusermail={user_id}&{user_mail}", filter = CallbackFilter.CUSTOM_PARAMETER)
+    public void onRemoveUserCB(CallbackData callbackData){
+      Map<String, Object> parameters = callbackData.getParameters();
+      db.removeMailFromUser(parameters.get("user_id"), parameters.get("user_mail"));
+    }
+}
+```
 
 ***
 # Default listener
@@ -318,19 +365,19 @@ Next we create our methods for handling commands and callbacks and annotate them
 public class MyEventClass implements Listener {
 
   @Command("start")
-  public void onStartCommand(TelegramLongPollingBot bot, Update update) {
+  public void onStartCommand(CommandData cmd) {
     //stuffs
   }
 
   @Command(value = "removeuser", args = 1)
   @HelpIdentifier("removeuserhelp")
   @Permission(listLocation = Bot.class, send = SendMethod.REPLY_MESSAGE, onMissingPermission = "You are not able to do that!")
-  public void onRemoveUser(TelegramLongPollingBot bot, Update update) {
+  public void onRemoveUser(CommandData cmd) {
     //stuffs
   }
 
   @Callback("home")
-  public void onHomeCallback(TelegramLongPollingBot bot, Update update) {
+  public void onHomeCallback(CallbackData callbackData) {
     //stuffs
   }
 

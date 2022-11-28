@@ -9,6 +9,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Command {
     String value();
+    char prefix() default '/';
     int args() default 0;
     String[] aliases() default "";
     boolean checkedArgs() default true;
