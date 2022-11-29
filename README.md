@@ -44,9 +44,9 @@ Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/Tele
   - [Help command](#Command)
 - [`Callback`](#Callback)
   - [Permission example](#Callback-permission)
-  - [Filters](##Filters-example)
+  - [Filters](#Filters-example)
 - [`Permission`](#Command-permission)
-  - [Permission Handler](#Permission-hanlder)
+  - [Permission Handler](#Permission-handler)
 - [`EventHandler`](#Event-Handler)
 - [`Default Listener`](#Default-listener)
   - [Filters]() | **Coming soon** |
