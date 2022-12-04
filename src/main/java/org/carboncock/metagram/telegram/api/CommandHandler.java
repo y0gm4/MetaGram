@@ -200,7 +200,7 @@ public class CommandHandler implements UpdateListener {
             SendMessage mex = new SendMessage();
             mex.setText(permMissing);
             mex.enableHtml(true);
-            mex.setChatId("" + user.getId());
+            mex.setChatId("" + update.getMessage().getChatId());
             if(send.equals(SendMethod.REPLY_MESSAGE))
                 mex.setReplyToMessageId(update.getMessage().getMessageId());
             bot.execute(mex);

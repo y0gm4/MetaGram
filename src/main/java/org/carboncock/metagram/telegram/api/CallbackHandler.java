@@ -174,14 +174,14 @@ public class CallbackHandler implements UpdateListener {
             switch(sendMethod){
                 case SEND_MESSAGE:
                     SendMessage send = new SendMessage();
-                    send.setChatId("" + user.getId());
+                    send.setChatId("" + update.getCallbackQuery().getMessage().getChatId());
                     send.enableHtml(true);
                     send.setText(permMissing);
                     bot.execute(send);
                     break;
                 case EDIT_MESSAGE:
                     EditMessageText edit = new EditMessageText();
-                    edit.setChatId("" + user.getId());
+                    edit.setChatId("" + update.getCallbackQuery().getMessage().getChatId());
                     edit.setMessageId(callbackQuery.getMessage().getMessageId());
                     edit.enableHtml(true);
                     edit.setText(permMissing);
@@ -189,7 +189,7 @@ public class CallbackHandler implements UpdateListener {
                     break;
                 case REPLY_MESSAGE:
                     SendMessage reply = new SendMessage();
-                    reply.setChatId("" + user.getId());
+                    reply.setChatId("" + update.getCallbackQuery().getMessage().getChatId());
                     reply.setReplyToMessageId(callbackQuery.getMessage().getMessageId());
                     reply.enableHtml(true);
                     reply.setText(permMissing);
