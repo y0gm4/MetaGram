@@ -1,4 +1,4 @@
-package org.carboncock.metagram.annotation;
+package org.carboncock.metagram.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -2,7 +2,7 @@ package org.carboncock.metagram.telegram.data;
 
 import lombok.Getter;
 import lombok.ToString;
-import org.carboncock.metagram.annotation.Command;
+import org.carboncock.metagram.annotations.Command;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;

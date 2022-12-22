@@ -1,4 +1,4 @@
-package org.carboncock.metagram.listener;
+package org.carboncock.metagram.listeners;
 
 public interface Permissionable {
     String onPermissionMissing();

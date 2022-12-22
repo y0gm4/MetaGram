@@ -1,9 +1,8 @@
 package org.carboncock.metagram.telegram.data;
 
 import lombok.Getter;
-import lombok.Setter;
-import org.carboncock.metagram.annotation.Permission;
-import org.carboncock.metagram.annotation.PermissionHandler;
+import org.carboncock.metagram.annotations.Permission;
+import org.carboncock.metagram.annotations.PermissionHandler;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 

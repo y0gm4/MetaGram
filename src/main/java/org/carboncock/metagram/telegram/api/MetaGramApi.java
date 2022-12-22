@@ -2,24 +2,22 @@ package org.carboncock.metagram.telegram.api;
 
 import lombok.Setter;
 import lombok.SneakyThrows;
-import org.carboncock.metagram.annotation.*;
-import org.carboncock.metagram.annotation.exception.AnnotationMissingException;
-import org.carboncock.metagram.annotation.exception.IllegalSendingMethodException;
-import org.carboncock.metagram.annotation.exception.ListFieldNotFoundException;
-import org.carboncock.metagram.annotation.types.SendMethod;
-import org.carboncock.metagram.listener.CallbackListener;
-import org.carboncock.metagram.listener.CommandListener;
-import org.carboncock.metagram.listener.Listener;
-import org.carboncock.metagram.listener.UpdateListener;
+import org.carboncock.metagram.annotations.*;
+import org.carboncock.metagram.exceptions.AnnotationMissingException;
+import org.carboncock.metagram.exceptions.IllegalSendingMethodException;
+import org.carboncock.metagram.exceptions.ListFieldNotFoundException;
+import org.carboncock.metagram.annotations.types.SendMethod;
+import org.carboncock.metagram.listeners.CallbackListener;
+import org.carboncock.metagram.listeners.CommandListener;
+import org.carboncock.metagram.listeners.Listener;
+import org.carboncock.metagram.listeners.UpdateListener;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class MetaGramApi extends TelegramLongPollingBot {
 

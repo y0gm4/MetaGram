@@ -1,4 +1,4 @@
-package org.carboncock.metagram.annotation.exception;
+package org.carboncock.metagram.exceptions;
 
 public class IllegalMethodException extends Exception{
     public IllegalMethodException(String error){

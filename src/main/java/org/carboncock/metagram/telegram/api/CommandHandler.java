@@ -1,18 +1,18 @@
 package org.carboncock.metagram.telegram.api;
 
 import lombok.SneakyThrows;
-import org.carboncock.metagram.annotation.Command;
-import org.carboncock.metagram.annotation.HelpIdentifier;
-import org.carboncock.metagram.annotation.Permission;
-import org.carboncock.metagram.annotation.PermissionHandler;
-import org.carboncock.metagram.annotation.exception.IllegalMethodException;
-import org.carboncock.metagram.annotation.exception.IllegalPermissionHandlerMethodException;
-import org.carboncock.metagram.annotation.types.PermissionType;
-import org.carboncock.metagram.annotation.types.SendMethod;
-import org.carboncock.metagram.listener.CommandListener;
-import org.carboncock.metagram.listener.Listener;
-import org.carboncock.metagram.listener.Permissionable;
-import org.carboncock.metagram.listener.UpdateListener;
+import org.carboncock.metagram.annotations.Command;
+import org.carboncock.metagram.annotations.HelpIdentifier;
+import org.carboncock.metagram.annotations.Permission;
+import org.carboncock.metagram.annotations.PermissionHandler;
+import org.carboncock.metagram.exceptions.IllegalMethodException;
+import org.carboncock.metagram.exceptions.IllegalPermissionHandlerMethodException;
+import org.carboncock.metagram.annotations.types.PermissionType;
+import org.carboncock.metagram.annotations.types.SendMethod;
+import org.carboncock.metagram.listeners.CommandListener;
+import org.carboncock.metagram.listeners.Listener;
+import org.carboncock.metagram.listeners.Permissionable;
+import org.carboncock.metagram.listeners.UpdateListener;
 import org.carboncock.metagram.telegram.data.CommandData;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -147,15 +147,18 @@ public class CommandHandler implements UpdateListener {
         AtomicReference<Optional<Method>> method = new AtomicReference<>(Optional.empty());
         genericListener.forEach(listener -> {
             Class<? extends Listener> clazz = listener.getClass();
-            method.set(Arrays.stream(clazz.getMethods())
+            Optional<Method> optMethod = Arrays.stream(clazz.getMethods())
                     .filter(m -> m.isAnnotationPresent(Command.class))
                     .filter(m -> {
                         Command c = m.getAnnotation(Command.class);
-                        if(c.prefix() != prefix) return false;
+                        if (c.prefix() != prefix) return false;
                         List<String> args = Arrays.asList(c.aliases());
                         return (c.value().equalsIgnoreCase(command) || args.contains(command.toLowerCase(Locale.ROOT)))
                                 && c.checkedArgs() && c.args() == command.split(" ").length - 1;
-                    }).findFirst());
+                    }).findFirst();
+
+            if(optMethod.isPresent() && !method.get().isPresent())
+                method.set(optMethod);
         });
         return method.get();
     }

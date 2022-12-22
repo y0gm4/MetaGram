@@ -1,4 +1,4 @@
-package org.carboncock.metagram.annotation.exception;
+package org.carboncock.metagram.exceptions;
 
 public class ListFieldNotFoundException extends Exception {
     public ListFieldNotFoundException(String error){

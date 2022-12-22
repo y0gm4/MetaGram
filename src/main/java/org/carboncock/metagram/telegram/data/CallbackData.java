@@ -2,11 +2,10 @@ package org.carboncock.metagram.telegram.data;
 
 import lombok.Getter;
 import lombok.ToString;
-import org.carboncock.metagram.annotation.Callback;
+import org.carboncock.metagram.annotations.Callback;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @ToString

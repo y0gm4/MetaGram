@@ -1,4 +1,4 @@
-package org.carboncock.metagram.listener;
+package org.carboncock.metagram.listeners;
 
 import org.carboncock.metagram.telegram.data.CommandData;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;

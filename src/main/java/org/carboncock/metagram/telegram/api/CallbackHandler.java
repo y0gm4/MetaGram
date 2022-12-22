@@ -1,18 +1,18 @@
 package org.carboncock.metagram.telegram.api;
 
 import lombok.SneakyThrows;
-import org.carboncock.metagram.annotation.Callback;
-import org.carboncock.metagram.annotation.Permission;
-import org.carboncock.metagram.annotation.PermissionHandler;
-import org.carboncock.metagram.annotation.exception.IllegalMethodException;
-import org.carboncock.metagram.annotation.exception.IllegalPermissionHandlerMethodException;
-import org.carboncock.metagram.annotation.types.CallbackFilter;
-import org.carboncock.metagram.annotation.types.PermissionType;
-import org.carboncock.metagram.annotation.types.SendMethod;
-import org.carboncock.metagram.listener.CallbackListener;
-import org.carboncock.metagram.listener.Listener;
-import org.carboncock.metagram.listener.Permissionable;
-import org.carboncock.metagram.listener.UpdateListener;
+import org.carboncock.metagram.annotations.Callback;
+import org.carboncock.metagram.annotations.Permission;
+import org.carboncock.metagram.annotations.PermissionHandler;
+import org.carboncock.metagram.exceptions.IllegalMethodException;
+import org.carboncock.metagram.exceptions.IllegalPermissionHandlerMethodException;
+import org.carboncock.metagram.annotations.types.CallbackFilter;
+import org.carboncock.metagram.annotations.types.PermissionType;
+import org.carboncock.metagram.annotations.types.SendMethod;
+import org.carboncock.metagram.listeners.CallbackListener;
+import org.carboncock.metagram.listeners.Listener;
+import org.carboncock.metagram.listeners.Permissionable;
+import org.carboncock.metagram.listeners.UpdateListener;
 import org.carboncock.metagram.telegram.data.CallbackData;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
@@ -98,11 +98,11 @@ public class CallbackHandler implements UpdateListener {
         AtomicReference<Optional<Method>> method = new AtomicReference<>(Optional.empty());
         genericListener.forEach(listener -> {
             Class<? extends Listener> clazz = listener.getClass();
-            method.set(Arrays.stream(clazz.getMethods())
+            Optional<Method> optMethod = Arrays.stream(clazz.getMethods())
                     .filter(m -> m.isAnnotationPresent(Callback.class))
                     .filter(m -> {
                         Callback callback = m.getAnnotation(Callback.class);
-                        switch(callback.filter()){
+                        switch (callback.filter()) {
                             case EQUALS:
                                 return query.equalsIgnoreCase(callback.value());
                             case START_WITH:
@@ -111,11 +111,13 @@ public class CallbackHandler implements UpdateListener {
                                 return query.contains(callback.value());
                             case CUSTOM_PARAMETER:
                                 return query.startsWith(callback.value().substring(0, callback.value().indexOf("=") + 1));
-                                // TODO check regex and add parameters
                         }
                         return false;
                     })
-                    .findFirst());
+                    .findFirst();
+
+            if(optMethod.isPresent() && !method.get().isPresent())
+                method.set(optMethod);
         });
         return method.get();
     }
@@ -137,6 +139,7 @@ public class CallbackHandler implements UpdateListener {
     @SneakyThrows
     private boolean isPermitted(Permission permission, Class<?> clazz,  TelegramLongPollingBot bot, Update update){
         User user = update.getCallbackQuery().getFrom();
+        String chatId = update.getCallbackQuery().getMessage().getChatId().toString();
         Class<?> listLocation = permission.listLocation();
         Optional<Method> optMethod = Arrays.stream(listLocation.getDeclaredMethods())
                 .filter(method -> method.isAnnotationPresent(PermissionHandler.class))
@@ -174,14 +177,14 @@ public class CallbackHandler implements UpdateListener {
             switch(sendMethod){
                 case SEND_MESSAGE:
                     SendMessage send = new SendMessage();
-                    send.setChatId("" + update.getCallbackQuery().getMessage().getChatId());
+                    send.setChatId(chatId);
                     send.enableHtml(true);
                     send.setText(permMissing);
                     bot.execute(send);
                     break;
                 case EDIT_MESSAGE:
                     EditMessageText edit = new EditMessageText();
-                    edit.setChatId("" + update.getCallbackQuery().getMessage().getChatId());
+                    edit.setChatId(chatId);
                     edit.setMessageId(callbackQuery.getMessage().getMessageId());
                     edit.enableHtml(true);
                     edit.setText(permMissing);
@@ -189,7 +192,7 @@ public class CallbackHandler implements UpdateListener {
                     break;
                 case REPLY_MESSAGE:
                     SendMessage reply = new SendMessage();
-                    reply.setChatId("" + update.getCallbackQuery().getMessage().getChatId());
+                    reply.setChatId(chatId);
                     reply.setReplyToMessageId(callbackQuery.getMessage().getMessageId());
                     reply.enableHtml(true);
                     reply.setText(permMissing);

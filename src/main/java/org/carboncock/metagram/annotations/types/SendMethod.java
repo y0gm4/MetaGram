@@ -1,4 +1,4 @@
-package org.carboncock.metagram.annotation.types;
+package org.carboncock.metagram.annotations.types;
 
 public enum SendMethod {
     SEND_MESSAGE,
