@@ -19,7 +19,7 @@ Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/Tele
 	<dependency>
 		<groupId>com.github.CarbonCock</groupId>
 		<artifactId>MetaGram</artifactId>
-		<version>1.2.0</version>
+		<version>1.3.0</version>
 	</dependency>
 	```
 - For *Gradle* Add the JitPack repository in your root `build.gradle` at the end of repositories, and add the dependency as shown:
@@ -32,7 +32,7 @@ Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/Tele
   ```
   ```groovy
   dependencies {
-      implementation 'com.github.CarbonCock:MetaGram:1.2.0'
+      implementation 'com.github.CarbonCock:MetaGram:1.3.0'
   }
   ```
 
@@ -44,12 +44,14 @@ Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/Tele
   - [Help command](#Command)
 - [`Callback`](#Callback)
   - [Permission example](#Callback-permission)
-  - [Filters](#Filters-example)
+  - [Callback Filters](#Filters-example)
 - [`Permission`](#Command-permission)
   - [Permission Handler](#Permission-handler)
+- [`Filters`](#filters)
+  - [Custom filters](#custom-filters)
 - [`EventHandler`](#Event-Handler)
 - [`Default Listener`](#Default-listener)
-  - [Filters]() | **Coming soon** |
+
 
 ## About
 ***
@@ -311,30 +313,30 @@ Depending on our needs, we can choose the filter that suits us best from these:
   - `filter_name`: It is the name of the filter (it works like the START_WITH filter) it basically checks if the received callback data starts with that sequence of characters.
   - `=`: Separates filter name from key sequence
   - `{key1}...`:  Sequence of keys which will be associated with the data sent and collected in a `Map<String, Object>` accessed by the `CallbackData` object
-  
+
 ### CUSTOM_PARAMETER example
 ```java
 @EventHandler
 public class MailSectionServices implements Listener {
-    
-    private final DbManager db = MyBot.db;
-    
-    @Command("mails")
-    public void onCommand(CommandData cmd){
-      InlineKeyboardMarkup ikm = new InlineKeyboardMarkup();
-      ikm.setKeyboard(Collections.singletonList(Collections.singletonList(InlineKeyboardButton.builder().text("support@CarbonCock.com").callbackData("rmusermail=%s&%s".formatted(0123456789L, "support@CarbonCock.com")).build())));
-      cmd.getBotInstance().execute(SendMessage.builder()
-              .chatId("" + cmd.getSender().getId())
-              .text("mails settings")
-              .replyMarkup(ikm)
-              .build());
-    }
 
-    @Callback(value = "rmusermail={user_id}&{user_mail}", filter = CallbackFilter.CUSTOM_PARAMETER)
-    public void onRemoveUserCB(CallbackData callbackData){
-      Map<String, Object> parameters = callbackData.getParameters();
-      db.removeMailFromUser(parameters.get("user_id"), parameters.get("user_mail"));
-    }
+  private final DbManager db = MyBot.db;
+
+  @Command("mails")
+  public void onCommand(CommandData cmd){
+    InlineKeyboardMarkup ikm = new InlineKeyboardMarkup();
+    ikm.setKeyboard(Collections.singletonList(Collections.singletonList(InlineKeyboardButton.builder().text("support@CarbonCock.com").callbackData("rmusermail=%s&%s".formatted(0123456789L, "support@CarbonCock.com")).build())));
+    cmd.getBotInstance().execute(SendMessage.builder()
+            .chatId("" + cmd.getSender().getId())
+            .text("mails settings")
+            .replyMarkup(ikm)
+            .build());
+  }
+
+  @Callback(value = "rmusermail={user_id}&{user_mail}", filter = CallbackFilter.CUSTOM_PARAMETER)
+  public void onRemoveUserCB(CallbackData callbackData){
+    Map<String, Object> parameters = callbackData.getParameters();
+    db.removeMailFromUser(parameters.get("user_id"), parameters.get("user_mail"));
+  }
 }
 ```
 
@@ -388,3 +390,88 @@ public class MyEventClass implements Listener {
 
 }
 ```
+
+# Filters
+> Filters allow filtering of received updates in order to split the flow over multiple methods.
+
+Suppose we want to check for a user who writes a private message to the bot, it can be done using the `@Filters(...)` annotation,
+it requires the following **fields**
+
+- `FilterType[]` value ---> An array of filters, the update will be filtered by checking if at least one of them is true (logical OR)
+- `String[]` fromWho ---> An array of strings, they stand for whether you should filter updates of users, bots, admins, etc... | **By default** "EVERYONE"
+- `String[]` fromWhere ---> An array of strings, An array of strings, they stand for whether you should filter channel updates, groups, private chats, etc... | **By default** "EVERYWHERE"
+- `String` regex ---> If the update is a message and contains text it will be taken and matched with the regex set | **By default** "" (means no regex)
+
+```java
+@EventHandler
+public class MyEventClass implements Listener {
+
+  @Filters(
+          value = FilterType.MESSAGE,
+          fromWhere = FilterType.Chat.PRIVATE,
+          regex = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$"
+  )
+  public void onMailReceived(TelegramLongPollingBot bot, Update update) {
+    // do stuffs...
+  }
+
+}
+```
+Suppose instead we want to check whether sticker, photo or video are sended in a group or supergroup, so that we can check, in a hypothetical case, whether the user has permission to be able to send them.
+
+```java
+@EventHandler
+public class MyEventClass implements Listener {
+
+  @Filters(
+          value = {FilterType.STICKER, FilterType.PHOTO, FilterType.VIDEO}, // (OR logic)
+          fromWhere = {FilterType.Chat.GROUP, FilterType.Chat.SUPER_GROUP}, // (OR logic)
+          fromWho = FilterType.By.USER
+  )
+  public void onStickerReceived(TelegramLongPollingBot bot, Update update) {
+    // check user permissions...
+  }
+
+}
+```
+
+## Custom filters
+> A custom filter to filter whenever there is an update.
+
+To create a custom filter you have to create a method similar to the one for the regular filter, but with boolean return.
+Then you need annotate it using the `@CustomFilterIdentifier(...)` annotation and specify a unique id.
+
+Finally, we annotate the method in which we want to filter the update by annotation `@CustomFilter(...)` specifying the following **fields** (the annotation is repeatable)
+
+- `Class<?>` cfLocation ---> The class in which the method is contained (custom filter) | **By default** Class.class (means the same class)
+- `String` value ---> The value of the unique custom filter id
+
+Suppose we need to filter only updates from users who are subscribed to a subscription or users who are whitelisted
+
+```java
+@EventHandler
+public class MyEventClass implements Listener {
+
+  @CustomFilter(cfLocation = MyEventClass.AnotherClass, value = "whitelist")
+  @CustomFilter("is_subscribed")
+  public void onFilteredUpdate(TelegramLongPollingBot bot, Update update) {
+    // do stuffs...
+  }
+
+  @CustomFilterIdentifier("is_subscribed")
+  public boolean isSubscribed(TelegramLongPollingBot bot, Update update) {
+    // check subscription...
+  }
+
+  public class AnotherClass {
+
+    @CustomFilterIdentifier("whitelist")
+    public boolean isInWhitelist(TelegramLongPollingBot bot, Update update){
+      // check whitelist...
+    }
+    
+  }
+  
+}
+```
+
