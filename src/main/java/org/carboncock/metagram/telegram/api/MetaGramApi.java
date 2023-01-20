@@ -192,8 +192,6 @@ public class MetaGramApi extends TelegramLongPollingBot {
                                     });
                         }
                         annotations.addAll(Arrays.asList(method.getAnnotationsByType(Filters.class)));
-//                        System.out.println(annotations);
-//                        System.out.println(method);
                         annotationsPerMethod.put(method, annotations);
                     });
             genericListeners.add(event);

@@ -80,6 +80,7 @@ public class CallbackHandler implements UpdateListener {
     private Optional<Class<? extends CallbackListener>> getCallbackClass(String query){
         for(Map.Entry<Callback, Class<? extends CallbackListener>> entry : queryMap.entrySet()){
             Callback c = entry.getKey();
+            if(!c.value().contains(query)) continue;
             switch(c.filter()){
                 case EQUALS:
                     return query.equalsIgnoreCase(c.value()) ? Optional.of(entry.getValue()) : Optional.empty();
