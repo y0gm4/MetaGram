@@ -19,7 +19,7 @@ Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/Tele
 	<dependency>
 		<groupId>com.github.CarbonCock</groupId>
 		<artifactId>MetaGram</artifactId>
-		<version>1.3.0</version>
+		<version>1.3.1</version>
 	</dependency>
 	```
 - For *Gradle* Add the JitPack repository in your root `build.gradle` at the end of repositories, and add the dependency as shown:
@@ -32,7 +32,7 @@ Simple extension of [rubenlaugs/TelegramBots](https://github.com/rubenlagus/Tele
   ```
   ```groovy
   dependencies {
-      implementation 'com.github.CarbonCock:MetaGram:1.3.0'
+      implementation 'com.github.CarbonCock:MetaGram:1.3.1'
   }
   ```
 
